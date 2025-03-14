@@ -6,7 +6,7 @@ An interactive ant colony optimization simulation built with p5.js.
 
 ## Live Demo
 
-You can access the live simulation here: [https://yourusername.github.io/AntColony/](https://yourusername.github.io/AntColony/)
+You can access the live simulation here: [https://tsdocode.github.io/vibe-ant-colony/](https://tsdocode.github.io/vibe-ant-colony/)
 
 (Note: Update the URL with your actual GitHub username once deployed)
 
