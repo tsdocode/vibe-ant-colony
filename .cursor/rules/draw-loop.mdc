@@ -1,0 +1,6 @@
+---
+description: Understand the Setup and Draw Loop
+globs: 
+---
+et comfortable with the setup() and draw() functions, as they form the backbone of most p5.js sketches. setup() runs once to initialize, and draw() runs continuously for animation.
+

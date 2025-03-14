@@ -2,7 +2,7 @@
 
 An interactive ant colony optimization simulation built with p5.js.
 
-![Ant Colony Simulation Screenshot](screenshot.png)
+![Ant Colony Simulation Screenshot](./assets/screen-shot.png)
 
 ## Live Demo
 

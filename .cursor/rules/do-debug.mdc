@@ -1,0 +1,6 @@
+---
+description: Debug Effectively
+globs: 
+---
+Use console.log() to print values and check your logic. The p5.js web editor’s built-in console is great for spotting errors quickly.
+

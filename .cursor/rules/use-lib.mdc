@@ -1,0 +1,6 @@
+---
+description: Experiment with Libraries
+globs: 
+---
+Explore p5.js add-ons like p5.sound, p5.dom, or community libraries to extend functionality (e.g., adding sound or HTML elements) while understanding their dependencies.
+
