@@ -1,5 +1,5 @@
 // Controls for the ant colony simulation
-let showPheromones = true;
+window.showPheromones = true; // Make it globally accessible
 
 // Wait for DOM to load completely
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,11 +25,20 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize the toggle pheromones button text
   togglePheromonesButton.textContent = showPheromones ? 'Hide Pheromones' : 'Show Pheromones';
 
-  // Add ants button
-  addAntsButton.addEventListener('click', function() {
+  // Add ants button with improved touch handling
+  addAntsButton.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent event bubbling
     addMoreAnts(10); // Add 10 ants when clicked
     closeControlPanelsOnMobile();
   });
+  
+  // Also handle touchend for better mobile response
+  addAntsButton.addEventListener('touchend', function(e) {
+    e.preventDefault(); // Prevent default touch behavior
+    e.stopPropagation();
+    addMoreAnts(10);
+    closeControlPanelsOnMobile();
+  }, { passive: false });
 
   // Ant count slider
   antCountSlider.addEventListener('input', function() {
@@ -66,21 +75,51 @@ document.addEventListener('DOMContentLoaded', function() {
     config.randomBehaviorRate = newRate;
   });
 
-  // Toggle pheromones button
-  togglePheromonesButton.addEventListener('click', function() {
-    showPheromones = !showPheromones;
-    this.textContent = showPheromones ? 'Hide Pheromones' : 'Show Pheromones';
-    closeControlPanelsOnMobile();
+  // Toggle pheromones button with improved touch handling
+  togglePheromonesButton.addEventListener('click', function(e) {
+    e.stopPropagation();
+    togglePheromones();
   });
+  
+  togglePheromonesButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePheromones();
+  }, { passive: false });
+  
+  function togglePheromones() {
+    showPheromones = !showPheromones;
+    togglePheromonesButton.textContent = showPheromones ? 'Hide Pheromones' : 'Show Pheromones';
+    closeControlPanelsOnMobile();
+  }
 
-  // Clear pheromones button
-  clearPheromonesButton.addEventListener('click', function() {
+  // Clear pheromones button with improved touch handling
+  clearPheromonesButton.addEventListener('click', function(e) {
+    e.stopPropagation();
     clearPheromones();
     closeControlPanelsOnMobile();
   });
   
-  // Add obstacle button
-  addObstacleButton.addEventListener('click', function() {
+  clearPheromonesButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    clearPheromones();
+    closeControlPanelsOnMobile();
+  }, { passive: false });
+  
+  // Add obstacle button with improved touch handling
+  addObstacleButton.addEventListener('click', function(e) {
+    e.stopPropagation();
+    addRandomObstacle();
+  });
+  
+  addObstacleButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    addRandomObstacle();
+  }, { passive: false });
+  
+  function addRandomObstacle() {
     // Add a random obstacle
     let x = random(50, width - 50);
     let y = random(50, height - 50);
@@ -92,26 +131,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     closeControlPanelsOnMobile();
-  });
+  }
   
-  // Clear obstacles button
-  clearObstaclesButton.addEventListener('click', function() {
+  // Clear obstacles button with improved touch handling
+  clearObstaclesButton.addEventListener('click', function(e) {
+    e.stopPropagation();
     obstacles = [];
     closeControlPanelsOnMobile();
   });
+  
+  clearObstaclesButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    obstacles = [];
+    closeControlPanelsOnMobile();
+  }, { passive: false });
 
-  // Reset simulation button
-  resetSimulationButton.addEventListener('click', function() {
+  // Reset simulation button with improved touch handling
+  resetSimulationButton.addEventListener('click', function(e) {
+    e.stopPropagation();
     resetSimulation();
     closeControlPanelsOnMobile();
+  });
+  
+  resetSimulationButton.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    resetSimulation();
+    closeControlPanelsOnMobile();
+  }, { passive: false });
+  
+  // Stop propagation for all sliders and inputs to prevent canvas interactions
+  document.querySelectorAll('input[type="range"]').forEach(slider => {
+    slider.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+    slider.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
+    slider.addEventListener('touchend', e => e.stopPropagation(), { passive: true });
   });
   
   // Function to close panels on mobile after button actions
   function closeControlPanelsOnMobile() {
     if (window.innerWidth <= 768) {
-      document.getElementById('left-panel').classList.remove('active');
-      document.getElementById('right-panel').classList.remove('active');
-      panelOverlay.classList.remove('active');
+      // Small delay to allow the action to complete
+      setTimeout(() => {
+        document.getElementById('left-panel').classList.remove('active');
+        document.getElementById('right-panel').classList.remove('active');
+        document.getElementById('audio-panel').classList.remove('active');
+        panelOverlay.classList.remove('active');
+      }, 300);
     }
   }
   
@@ -221,4 +287,4 @@ function resetSimulation() {
   
   // Restart the simulation
   setup();
-} 
+}

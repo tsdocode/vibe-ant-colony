@@ -8,12 +8,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const rightPanel = document.getElementById('right-panel');
   const panelOverlay = document.getElementById('panel-overlay');
   
+  // Check if required elements exist
+  if (!leftPanelToggle || !rightPanelToggle || !leftPanel || !rightPanel || !panelOverlay) {
+    console.warn('Mobile UI elements not found - mobile functionality may be limited');
+    return; // Exit if elements don't exist
+  }
+  
   // Initialize panels as closed
   let leftPanelOpen = false;
   let rightPanelOpen = false;
   
   // Function to toggle the left panel
-  leftPanelToggle.addEventListener('click', function() {
+  leftPanelToggle.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent event from bubbling
     leftPanelOpen = !leftPanelOpen;
     rightPanelOpen = false; // Close the other panel
     
@@ -23,7 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Function to toggle the right panel
-  rightPanelToggle.addEventListener('click', function() {
+  rightPanelToggle.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent event from bubbling
     rightPanelOpen = !rightPanelOpen;
     leftPanelOpen = false; // Close the other panel
     
@@ -41,39 +49,45 @@ document.addEventListener('DOMContentLoaded', function() {
     rightPanelOpen = false;
   });
   
-  // Handle touch events to improve mobile interaction
+  // Ensure clicks on the panels don't close them
+  leftPanel.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent event from reaching the overlay
+  });
   
-  // Prevent double-tap zoom on mobile
+  rightPanel.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent event from reaching the overlay
+  });
+  
+  // Modified touch handling - Fix clicking issues
+  
+  // Instead of preventing ALL double-tap zooms, only prevent on the canvas
+  const canvas = document.querySelector('canvas');
   let lastTouchEnd = 0;
-  document.addEventListener('touchend', function(event) {
-    const now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) {
-      event.preventDefault();
-    }
-    lastTouchEnd = now;
-  }, false);
   
-  // Prevent pinch zoom on mobile
-  document.addEventListener('touchmove', function(event) {
-    if (event.touches.length > 1) {
-      // More than one finger - likely trying to pinch
-      // Check if we're on the canvas
-      const canvasRect = document.querySelector('canvas').getBoundingClientRect();
-      const touch1 = event.touches[0];
-      
-      if (
-        touch1.clientX >= canvasRect.left &&
-        touch1.clientX <= canvasRect.right &&
-        touch1.clientY >= canvasRect.top &&
-        touch1.clientY <= canvasRect.bottom
-      ) {
-        // Don't prevent default if we have 2+ touches on canvas 
-        // (allow for multi-touch obstacle placement)
-      } else {
+  if (canvas) {
+    canvas.addEventListener('touchend', function(event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
         event.preventDefault();
       }
-    }
-  }, { passive: false });
+      lastTouchEnd = now;
+    }, false);
+    
+    // More selective touchmove prevention - only prevent on canvas
+    canvas.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        // Only prevent default for multi-touch on canvas
+        event.preventDefault();
+      }
+    }, { passive: false });
+  }
+  
+  // Allow touch events to pass through to buttons and controls
+  document.querySelectorAll('button, input, .control-panel').forEach(function(el) {
+    el.addEventListener('touchstart', function(e) {
+      e.stopPropagation(); // Don't bubble up to the canvas
+    }, { passive: true });
+  });
   
   // Add instructions for mobile users
   const showMobileInstructions = function() {
@@ -133,14 +147,24 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       document.head.appendChild(style);
       
-      // Close button
-      document.getElementById('close-tip').addEventListener('click', function() {
-        document.body.removeChild(tip);
-        localStorage.setItem('mobileTipShown', 'true');
-      });
+      // Close button - safely add event listener
+      const closeButton = document.getElementById('close-tip');
+      if (closeButton) {
+        closeButton.addEventListener('click', function() {
+          document.body.removeChild(tip);
+          localStorage.setItem('mobileTipShown', 'true');
+        });
+      }
     }
   };
   
   // Show mobile instructions after a short delay
   setTimeout(showMobileInstructions, 1000);
+  
+  // Fix for iOS Safari - make the panels scrollable
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    document.querySelectorAll('.control-panel').forEach(panel => {
+      panel.style.webkitOverflowScrolling = 'touch';
+    });
+  }
 }); 

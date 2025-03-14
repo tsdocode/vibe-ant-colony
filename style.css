@@ -18,7 +18,7 @@ body {
 canvas {
   display: block;
   border-radius: 8px;
-  touch-action: none; /* Disable browser handling of all panning and zooming gestures */
+  touch-action: none; /* Disable browser handling only for the canvas */
 }
 
 #simulation-container {
@@ -27,6 +27,7 @@ canvas {
   height: 100vh;
   max-width: 1500px;
   overflow: hidden;
+  position: relative; /* Ensure proper stacking */
 }
 
 #canvas-container {
@@ -36,6 +37,9 @@ canvas {
   align-items: center;
   padding: 15px;
   min-width: 0; /* Allow container to shrink below min-content width */
+  touch-action: manipulation; /* Allow regular touch interactions */
+  position: relative; /* For proper z-index stacking */
+  z-index: 1; /* Lower than controls */
 }
 
 .control-panel {
@@ -48,6 +52,8 @@ canvas {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   transition: transform 0.3s ease; /* For panel slide animation */
+  z-index: 20; /* Higher than canvas, lower than toggles */
+  touch-action: auto; /* Enable standard touch behavior */
 }
 
 #left-panel {
@@ -80,6 +86,7 @@ canvas {
   margin-bottom: 24px;
   padding-bottom: 18px;
   border-bottom: 1px solid #333;
+  position: relative; /* Ensure proper stacking */
 }
 
 .control-group:last-child {
@@ -99,6 +106,7 @@ canvas {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  position: relative; /* Ensure proper stacking */
 }
 
 .control label {
@@ -119,6 +127,7 @@ canvas {
 .slider-container {
   width: 100%;
   margin-bottom: 16px;
+  position: relative; /* Ensure proper stacking */
 }
 
 input[type="range"] {
@@ -129,37 +138,44 @@ input[type="range"] {
   border-radius: 2px;
   outline: none;
   margin: 10px 0;
+  touch-action: manipulation; /* Better touch interactions */
+  z-index: 2; /* Ensure proper stacking */
+  position: relative;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px; /* Larger for touch targets */
-  height: 20px;
+  width: 24px; /* Larger for touch targets */
+  height: 24px;
   background: #4CAF50;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
+  z-index: 3; /* Ensure it's above the track */
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
+input[type="range"]::-webkit-slider-thumb:hover,
+input[type="range"]::-webkit-slider-thumb:active {
   background: #5dca60;
+  transform: scale(1.1);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px; /* Larger for touch targets */
-  height: 20px;
+  width: 24px; /* Larger for touch targets */
+  height: 24px;
   background: #4CAF50;
   border-radius: 50%;
   cursor: pointer;
   border: none;
+  z-index: 3;
 }
 
 button {
   background-color: #4CAF50;
   border: none;
   color: white;
-  padding: 10px 12px; /* Taller buttons for better touch targets */
+  padding: 12px 15px; /* Taller buttons for better touch targets */
   text-align: center;
   font-size: 0.85rem;
   margin: 6px 0;
@@ -169,11 +185,15 @@ button {
   width: 100%;
   font-weight: 500;
   touch-action: manipulation; /* Improve touch responsiveness */
+  position: relative; /* Ensure proper stacking */
+  z-index: 2; /* Ensure it's clickable */
+  -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlight */
+  user-select: none; /* Prevent text selection on tap */
 }
 
-button:hover, button:active {
+button:active {
+  transform: translateY(2px);
   background-color: #45a049;
-  transform: translateY(-1px);
 }
 
 #toggle-pheromones, #clear-pheromones {
@@ -181,7 +201,6 @@ button:hover, button:active {
   margin-bottom: 8px;
 }
 
-#toggle-pheromones:hover, #clear-pheromones:hover,
 #toggle-pheromones:active, #clear-pheromones:active {
   background-color: #0b7dda;
 }
@@ -191,7 +210,7 @@ button:hover, button:active {
   margin-top: 4px;
 }
 
-#reset-simulation:hover, #reset-simulation:active {
+#reset-simulation:active {
   background-color: #d32f2f;
 }
 
@@ -199,18 +218,20 @@ button:hover, button:active {
 .panel-toggle {
   display: none;
   position: fixed;
-  z-index: 100;
-  background: rgba(76, 175, 80, 0.7);
+  z-index: 100; /* Higher than everything else */
+  background: rgba(76, 175, 80, 0.9); /* More opaque for visibility */
   color: white;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   font-size: 20px;
-  line-height: 40px;
+  line-height: 44px;
   text-align: center;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent; /* Remove highlight on tap */
+  cursor: pointer;
 }
 
 #left-panel-toggle {
@@ -221,6 +242,23 @@ button:hover, button:active {
 #right-panel-toggle {
   top: 10px;
   right: 10px;
+}
+
+/* Panel overlay for mobile */
+.panel-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10; /* Lower than controls higher than canvas */
+  touch-action: auto; /* Allow normal touch on overlay */
+}
+
+.panel-overlay.active {
+  display: block;
 }
 
 /* For mobile and tablet */
@@ -291,7 +329,7 @@ button:hover, button:active {
     height: 100vh;
     width: 85%;
     max-width: 300px;
-    z-index: 10;
+    z-index: 50; /* Higher than overlay */
     transition: transform 0.3s ease;
   }
   
@@ -314,25 +352,26 @@ button:hover, button:active {
     transform: translateX(0);
   }
   
-  /* Background overlay when panel is open */
-  .panel-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 5;
-  }
-  
-  .panel-overlay.active {
-    display: block;
-  }
-  
   /* Reset control groups to full width */
   .control-group {
     width: 100%;
+  }
+  
+  /* Make buttons easier to tap on mobile */
+  button {
+    padding: 14px 12px;
+    margin: 8px 0;
+  }
+  
+  /* Improve slider handles for touch */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -351,18 +390,8 @@ button:hover, button:active {
     font-size: 1rem;
   }
   
-  input[type="range"]::-webkit-slider-thumb {
-    width: 22px; /* Even larger touch target for small screens */
-    height: 22px;
-  }
-  
-  input[type="range"]::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-  }
-  
   button {
-    padding: 12px;
+    padding: 14px;
   }
 }
 
@@ -401,4 +430,155 @@ button:hover, button:active {
 .github-link a:hover {
   color: #5dca60;
   text-decoration: underline;
+}
+
+/* Audio panel */
+.audio-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
+  visibility: hidden;
+  width: 300px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.audio-panel.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+
+.audio-panel h3 {
+  color: #4CAF50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.audio-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.audio-track {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.audio-track label {
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+.track-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audio-btn {
+  background-color: #333;
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  z-index: 2;
+}
+
+.audio-btn:active {
+  background-color: #4CAF50;
+}
+
+.close-btn {
+  background-color: #f44336;
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: auto;
+  margin-top: 10px;
+  z-index: 2;
+}
+
+.close-btn:active {
+  background-color: #d32f2f;
+}
+
+input[type="range"].volume-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+}
+
+/* Audio toggle button */
+#audio-toggle {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(76, 175, 80, 0.9);
+  width: 44px;
+  height: 44px;
+}
+
+/* Make room for the audio toggle */
+#left-panel-toggle {
+  top: 10px;
+  left: 10px;
+}
+
+#right-panel-toggle {
+  top: 10px;
+  right: 10px;
+}
+
+/* Responsive adjustments for audio panel */
+@media screen and (max-width: 768px) {
+  .audio-panel {
+    width: 85%;
+    max-width: 300px;
+  }
+  
+  #audio-toggle {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+/* Animation for audio visualization */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.audio-playing #canvas-container {
+  animation: pulse 5s infinite ease-in-out;
 } 
