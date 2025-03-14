@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Interactive ant colony optimization simulation demonstrating swarm intelligence and emergent behavior">
     <meta name="keywords" content="ant colony, simulation, p5.js, swarm intelligence, emergent behavior">
     <meta name="author" content="Your Name">
@@ -13,8 +13,22 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon/favicon.png">
+    
+    <!-- Font Awesome for mobile toggle icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
+    <!-- Mobile panel toggle buttons -->
+    <button id="left-panel-toggle" class="panel-toggle">
+        <i class="fas fa-cog"></i>
+    </button>
+    <button id="right-panel-toggle" class="panel-toggle">
+        <i class="fas fa-tree"></i>
+    </button>
+    
+    <!-- Panel overlay for mobile -->
+    <div id="panel-overlay" class="panel-overlay"></div>
+    
     <div id="simulation-container">
         <div id="left-panel" class="control-panel">
             <h2>Colony Controls</h2>
@@ -102,7 +116,7 @@
                     <button id="clear-obstacles">Clear Obstacles</button>
                 </div>
                 <div class="info-text">
-                    <small>Shift+Click to add obstacles manually</small>
+                    <small>Shift+Click to add obstacles manually<br>(Two-finger tap on mobile)</small>
                 </div>
             </div>
         </div>
@@ -114,5 +128,6 @@
     <script src="pheromone.js"></script>
     <script src="obstacle.js"></script>
     <script src="controls.js"></script>
+    <script src="mobile.js"></script>
 </body>
 </html> 

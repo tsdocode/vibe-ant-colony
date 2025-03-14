@@ -4,11 +4,11 @@ let foods = [];
 let obstacles = [];
 let pheromoneMap;
 let config = {
-  canvasWidth: 800,
+  canvasWidth: 700,
   canvasHeight: 600,
   antCount: 100,
   foodCount: 5,
-  nestX: 400,
+  nestX: 350,
   nestY: 300,
   nestRadius: 20,
   evaporationRate: 0.995, // Rate at which pheromones evaporate
@@ -18,10 +18,34 @@ let config = {
   sensorDistance: 20,
   pheromoneStrength: 1.0,
   randomBehaviorRate: 0.1, // Probability of ignoring pheromones
-  obstacleCount: 5         // Number of random obstacles to place
+  obstacleCount: 5,        // Number of random obstacles to place
+  isMobile: false          // Flag for mobile detection
 };
 
 function setup() {
+  // Detect if we're on mobile
+  detectMobile();
+  
+  // Make canvas responsive
+  let canvasParent = document.getElementById('canvas-container');
+  let canvasWidth = canvasParent.clientWidth - 30; // Account for padding
+  let canvasHeight = min(window.innerHeight * 0.7, 600); // Limit max height
+  
+  config.canvasWidth = canvasWidth;
+  config.canvasHeight = canvasHeight;
+  
+  // Center of canvas should be the nest position
+  config.nestX = canvasWidth / 2;
+  config.nestY = canvasHeight / 2;
+  
+  // Adjust parameters for mobile
+  if (config.isMobile) {
+    // Smaller values for better performance on mobile
+    config.antCount = max(50, config.antCount);
+    config.pheromoneStrength = min(2.0, config.pheromoneStrength);
+    config.obstacleCount = 3;
+  }
+  
   // Create canvas inside the canvas-container
   const canvas = createCanvas(config.canvasWidth, config.canvasHeight);
   canvas.parent('canvas-container');
@@ -48,6 +72,49 @@ function setup() {
   // Create obstacles
   obstacles = [];
   createRandomObstacles(config.obstacleCount);
+  
+  // Add window resize listener
+  window.addEventListener('resize', windowResized);
+}
+
+function detectMobile() {
+  // Check if we're on a mobile device
+  config.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+}
+
+function windowResized() {
+  // Only resize if significant change in dimensions
+  let canvasParent = document.getElementById('canvas-container');
+  let newWidth = canvasParent.clientWidth - 30;
+  let newHeight = min(window.innerHeight * 0.7, 600);
+  
+  // Check if size changed significantly
+  if (abs(newWidth - config.canvasWidth) > 50 || abs(newHeight - config.canvasHeight) > 50) {
+    // Save nest position relative ratio
+    let nestXRatio = config.nestX / config.canvasWidth;
+    let nestYRatio = config.nestY / config.canvasHeight;
+    
+    // Update canvas size
+    config.canvasWidth = newWidth;
+    config.canvasHeight = newHeight;
+    
+    // Update nest position
+    config.nestX = config.canvasWidth * nestXRatio;
+    config.nestY = config.canvasHeight * nestYRatio;
+    
+    // Resize canvas
+    resizeCanvas(config.canvasWidth, config.canvasHeight);
+    
+    // Recreate pheromone map for new dimensions
+    pheromoneMap = new PheromoneMap(config.canvasWidth, config.canvasHeight);
+    
+    // Update colony position
+    colony.position.x = config.nestX;
+    colony.position.y = config.nestY;
+    
+    // Redetect mobile
+    detectMobile();
+  }
 }
 
 function draw() {
@@ -92,7 +159,7 @@ function displayInfo() {
   
   // Text for info
   fill(255);
-  textSize(16);
+  textSize(config.isMobile ? 14 : 16);
   textAlign(LEFT, TOP);
   text(`Ants: ${colony.ants.length}`, 15, 15);
   text(`Food Collected: ${colony.foodCollected}`, 15, 40);
@@ -114,20 +181,34 @@ function createRandomObstacles(count) {
   }
 }
 
-// Add interaction to place/remove food or obstacles
+// Handle both mouse and touch input
 function mousePressed() {
-  // Only process clicks that happen on the canvas
+  handleInteraction(mouseX, mouseY);
+}
+
+function touchStarted() {
+  // Prevent default touch behavior
   if (mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height) {
+    handleInteraction(mouseX, mouseY);
+    return false;
+  }
+  return true;
+}
+
+// Unified interaction handler
+function handleInteraction(x, y) {
+  // Only process clicks that happen on the canvas
+  if (x >= 0 && x < width && y >= 0 && y < height) {
     // Check if shift key is pressed for obstacle placement
-    if (keyIsDown(SHIFT)) {
+    if (keyIsDown(SHIFT) || (touches && touches.length > 1)) { // Shift key or multi-touch for obstacles
       // Place a new obstacle
-      obstacles.push(new Obstacle(mouseX, mouseY, random(30, 60)));
+      obstacles.push(new Obstacle(x, y, random(30, 60)));
       return;
     }
     
     // Check if near a food source to remove it
     for (let i = foods.length - 1; i >= 0; i--) {
-      if (dist(mouseX, mouseY, foods[i].position.x, foods[i].position.y) < foods[i].size / 2) {
+      if (dist(x, y, foods[i].position.x, foods[i].position.y) < foods[i].size / 2) {
         foods.splice(i, 1);
         return;
       }
@@ -135,15 +216,15 @@ function mousePressed() {
     
     // Check if near an obstacle to remove it
     for (let i = obstacles.length - 1; i >= 0; i--) {
-      if (obstacles[i].contains(mouseX, mouseY)) {
+      if (obstacles[i].contains(x, y)) {
         obstacles.splice(i, 1);
         return;
       }
     }
     
     // Add new food if clicked away from nest
-    if (dist(mouseX, mouseY, config.nestX, config.nestY) > config.nestRadius) {
-      foods.push(new Food(mouseX, mouseY, random(20, 50)));
+    if (dist(x, y, config.nestX, config.nestY) > config.nestRadius) {
+      foods.push(new Food(x, y, random(20, 50)));
     }
   }
 } 

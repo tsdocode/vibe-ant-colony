@@ -20,13 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const addObstacleButton = document.getElementById('add-obstacle');
   const clearObstaclesButton = document.getElementById('clear-obstacles');
   const resetSimulationButton = document.getElementById('reset-simulation');
-
+  const panelOverlay = document.getElementById('panel-overlay');
+  
   // Initialize the toggle pheromones button text
   togglePheromonesButton.textContent = showPheromones ? 'Hide Pheromones' : 'Show Pheromones';
 
   // Add ants button
   addAntsButton.addEventListener('click', function() {
     addMoreAnts(10); // Add 10 ants when clicked
+    closeControlPanelsOnMobile();
   });
 
   // Ant count slider
@@ -68,11 +70,13 @@ document.addEventListener('DOMContentLoaded', function() {
   togglePheromonesButton.addEventListener('click', function() {
     showPheromones = !showPheromones;
     this.textContent = showPheromones ? 'Hide Pheromones' : 'Show Pheromones';
+    closeControlPanelsOnMobile();
   });
 
   // Clear pheromones button
   clearPheromonesButton.addEventListener('click', function() {
     clearPheromones();
+    closeControlPanelsOnMobile();
   });
   
   // Add obstacle button
@@ -86,21 +90,58 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dist(x, y, config.nestX, config.nestY) > config.nestRadius * 2) {
       obstacles.push(new Obstacle(x, y, size));
     }
+    
+    closeControlPanelsOnMobile();
   });
   
   // Clear obstacles button
   clearObstaclesButton.addEventListener('click', function() {
     obstacles = [];
+    closeControlPanelsOnMobile();
   });
 
   // Reset simulation button
   resetSimulationButton.addEventListener('click', function() {
     resetSimulation();
+    closeControlPanelsOnMobile();
   });
+  
+  // Function to close panels on mobile after button actions
+  function closeControlPanelsOnMobile() {
+    if (window.innerWidth <= 768) {
+      document.getElementById('left-panel').classList.remove('active');
+      document.getElementById('right-panel').classList.remove('active');
+      panelOverlay.classList.remove('active');
+    }
+  }
+  
+  // Update UI to match initial config
+  updateUIFromConfig();
 });
+
+// Function to update UI to match config values
+function updateUIFromConfig() {
+  if (document.readyState === 'complete') {
+    document.getElementById('ant-count-slider').value = config.antCount;
+    document.getElementById('ant-count-display').textContent = config.antCount;
+    document.getElementById('pheromone-strength-slider').value = config.pheromoneStrength;
+    document.getElementById('pheromone-strength-display').textContent = config.pheromoneStrength.toFixed(1);
+    document.getElementById('evaporation-rate-slider').value = config.evaporationRate;
+    document.getElementById('evaporation-rate-display').textContent = config.evaporationRate.toFixed(3);
+    document.getElementById('ant-speed-slider').value = config.antSpeed;
+    document.getElementById('ant-speed-display').textContent = config.antSpeed.toFixed(1);
+    document.getElementById('random-behavior-slider').value = config.randomBehaviorRate;
+    document.getElementById('random-behavior-display').textContent = config.randomBehaviorRate.toFixed(2);
+  }
+}
 
 // Function to add more ants to the colony
 function addMoreAnts(count) {
+  // Adjust count for mobile
+  if (config.isMobile && count > 5) {
+    count = 5; // Add fewer ants at once on mobile for performance
+  }
+  
   const newAnts = colony.addAnts(count);
   config.antCount += count;
   
@@ -147,41 +188,36 @@ function clearPheromones() {
 
 // Function to reset the entire simulation
 function resetSimulation() {
+  // Detect if we're on mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  
   // Reset to initial configuration
   const defaultConfig = {
-    canvasWidth: 700,
-    canvasHeight: 600,
-    antCount: 100,
-    foodCount: 5,
-    nestX: 350,
-    nestY: 300,
+    canvasWidth: window.innerWidth < 768 ? window.innerWidth : 700,
+    canvasHeight: window.innerWidth < 768 ? window.innerHeight * 0.7 : 600,
+    antCount: isMobile ? 50 : 100,
+    foodCount: isMobile ? 3 : 5,
+    nestX: 0, // Will be set in setup based on canvas size
+    nestY: 0, // Will be set in setup based on canvas size
     nestRadius: 20,
     evaporationRate: 0.995,
     diffusionRate: 0.1,
     antSpeed: 2,
     pheromoneStrength: 1.0,
     randomBehaviorRate: 0.1,
-    obstacleCount: 5
+    obstacleCount: isMobile ? 3 : 5,
+    isMobile: isMobile
   };
   
   // Update the config with default values
   Object.assign(config, defaultConfig);
   
-  // Reset UI controls to match defaults
-  document.getElementById('ant-count-slider').value = defaultConfig.antCount;
-  document.getElementById('ant-count-display').textContent = defaultConfig.antCount;
-  document.getElementById('pheromone-strength-slider').value = defaultConfig.pheromoneStrength;
-  document.getElementById('pheromone-strength-display').textContent = defaultConfig.pheromoneStrength.toFixed(1);
-  document.getElementById('evaporation-rate-slider').value = defaultConfig.evaporationRate;
-  document.getElementById('evaporation-rate-display').textContent = defaultConfig.evaporationRate.toFixed(3);
-  document.getElementById('ant-speed-slider').value = defaultConfig.antSpeed;
-  document.getElementById('ant-speed-display').textContent = defaultConfig.antSpeed.toFixed(1);
-  document.getElementById('random-behavior-slider').value = defaultConfig.randomBehaviorRate;
-  document.getElementById('random-behavior-display').textContent = defaultConfig.randomBehaviorRate.toFixed(2);
-  
   // Show pheromones by default after reset
   showPheromones = true;
   document.getElementById('toggle-pheromones').textContent = 'Hide Pheromones';
+  
+  // Update UI controls to match defaults
+  updateUIFromConfig();
   
   // Restart the simulation
   setup();
