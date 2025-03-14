@@ -147,14 +147,19 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       document.head.appendChild(style);
       
-      // Close button - safely add event listener
-      const closeButton = document.getElementById('close-tip');
-      if (closeButton) {
-        closeButton.addEventListener('click', function() {
-          document.body.removeChild(tip);
-          localStorage.setItem('mobileTipShown', 'true');
-        });
-      }
+      // Close button - safely add event listener AFTER appending to DOM
+      setTimeout(() => {
+        const closeButton = document.getElementById('close-tip');
+        if (closeButton) {
+          closeButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event bubbling
+            if (tip && tip.parentNode) {
+              document.body.removeChild(tip);
+            }
+            localStorage.setItem('mobileTipShown', 'true');
+          });
+        }
+      }, 100); // Short delay to ensure DOM is updated
     }
   };
   
