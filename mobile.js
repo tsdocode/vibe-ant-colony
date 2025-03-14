@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <p>• Tap on the <i class="fas fa-cog"></i> or <i class="fas fa-tree"></i> icons to access controls</p>
           <p>• Tap to add food sources</p>
           <p>• Use two-finger tap to add obstacles</p>
-          <button id="close-tip">Got it!</button>
+          <div id="close-tip" class="close-tip-button">Got it!</div>
         </div>
       `;
       document.body.appendChild(tip);
@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
           display: flex;
           align-items: center;
           justify-content: center;
+          touch-action: manipulation;
         }
         .tip-content {
           background: #1e1e1e;
@@ -127,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
           border-radius: 8px;
           max-width: 80%;
           text-align: center;
+          z-index: 1001;
         }
         .tip-content h3 {
           color: #4CAF50;
@@ -135,31 +137,60 @@ document.addEventListener('DOMContentLoaded', function() {
         .tip-content p {
           margin: 10px 0;
         }
-        #close-tip {
+        .close-tip-button {
           background: #4CAF50;
           border: none;
           color: white;
-          padding: 8px 16px;
+          padding: 12px 20px;
           border-radius: 4px;
-          margin-top: 15px;
+          margin: 20px auto 5px;
           cursor: pointer;
+          display: inline-block;
+          font-weight: bold;
+          font-size: 16px;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+          user-select: none;
+          -webkit-user-select: none;
+        }
+        .close-tip-button:active {
+          background: #3d8b3d;
+          transform: scale(0.98);
         }
       `;
       document.head.appendChild(style);
       
-      // Close button - safely add event listener AFTER appending to DOM
+      // Create a function to handle closing the tip
+      const closeTip = function() {
+        if (tip && tip.parentNode) {
+          document.body.removeChild(tip);
+        }
+        localStorage.setItem('mobileTipShown', 'true');
+      };
+      
+      // Wait for DOM to be ready
       setTimeout(() => {
         const closeButton = document.getElementById('close-tip');
         if (closeButton) {
-          closeButton.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent event bubbling
-            if (tip && tip.parentNode) {
-              document.body.removeChild(tip);
-            }
-            localStorage.setItem('mobileTipShown', 'true');
+          // Add multiple event listeners for better touch interaction
+          ['click', 'touchstart', 'touchend'].forEach(eventType => {
+            closeButton.addEventListener(eventType, function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              closeTip();
+            }, { passive: false });
           });
+          
+          // Also add a click handler to the entire tip that checks if the click was on the button
+          tip.addEventListener('click', function(e) {
+            if (e.target.id === 'close-tip' || e.target.classList.contains('close-tip-button')) {
+              e.preventDefault();
+              e.stopPropagation();
+              closeTip();
+            }
+          }, { passive: false });
         }
-      }, 100); // Short delay to ensure DOM is updated
+      }, 100);
     }
   };
   
